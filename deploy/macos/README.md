@@ -56,7 +56,12 @@ Launchers live in `~/.local/bin`. If that directory is not on PATH, use the full
 paths above. Ordinary `claude` and `codex` retain their existing login and settings.
 The wrappers set credentials only for the launched process. The Claude launcher
 sets `ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN`; the Codex launcher defines a
-custom provider using the Responses API at `http://127.0.0.1:8317/v1`.
+custom provider using the Responses API at `http://127.0.0.1:8317/v1`, with
+`supports_websockets=true`. Codex OAuth files default to upstream WebSockets in
+this fork, including newly connected and imported accounts. An explicit
+`websockets: false` account setting is preserved. Normal Codex messages prefer
+WebSockets on both hops; HTTP remains available for compact requests and upgrade
+fallbacks. Deprecated `responses_websockets*` feature flags are not required.
 
 On the Mac mini, both CLIs and launchers are installed:
 
@@ -91,6 +96,7 @@ model = "MODEL_ID"
 name = "DIodide Mac mini"
 base_url = "http://127.0.0.1:8317/v1"
 wire_api = "responses"
+supports_websockets = true
 
 [model_providers.diodide-desktop.auth]
 command = "/bin/cat"

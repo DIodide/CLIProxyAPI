@@ -247,6 +247,13 @@ func synthesizeFileAuths(ctx *SynthesisContext, fullPath string, data []byte) ([
 			a.Attributes["base_url"] = kimiauth.ResolveKimiAPIBaseURL(resolvedDomain)
 		}
 	}
+	// Imported and existing Codex OAuth files also default to WebSockets.
+	if provider == "codex" {
+		if _, configured := metadata["websockets"]; !configured {
+			metadata["websockets"] = true
+		}
+	}
+
 	// For codex auth files, extract plan_type from metadata or JWT id_token.
 	if provider == "codex" {
 		if ptRaw, ok := metadata["plan_type"].(string); ok && strings.TrimSpace(ptRaw) != "" {

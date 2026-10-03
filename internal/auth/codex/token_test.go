@@ -75,3 +75,22 @@ func TestSaveTokenToFile_PreservesCustomMetadata(t *testing.T) {
 		t.Errorf("weight = %v, want 42", saved["weight"])
 	}
 }
+
+func TestSaveTokenToFile_DefaultsToWebsockets(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "codex.json")
+	storage := &CodexTokenStorage{Email: "test@example.com"}
+	if err := storage.SaveTokenToFile(path); err != nil {
+		t.Fatal(err)
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var saved map[string]any
+	if err := json.Unmarshal(raw, &saved); err != nil {
+		t.Fatal(err)
+	}
+	if saved["websockets"] != true {
+		t.Fatalf("websockets = %v, want true", saved["websockets"])
+	}
+}

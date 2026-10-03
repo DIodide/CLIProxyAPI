@@ -1108,3 +1108,29 @@ func TestSynthesizeAuthFile_CodexPlanType(t *testing.T) {
 		})
 	}
 }
+
+func TestCodexOAuthWebsocketDefault(t *testing.T) {
+	for _, tc := range []struct {
+		name, raw string
+		want      any
+	}{
+		{"default", `{"type":"codex","email":"test@example.com"}`, true},
+		{"opt-out", `{"type":"codex","websockets":false}`, false},
+		{"string-opt-out", `{"type":"codex","websockets":"false"}`, "false"},
+		{"other-provider", `{"type":"claude","email":"test@example.com"}`, nil},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := &SynthesisContext{Config: &config.Config{}, AuthDir: t.TempDir(), Now: time.Now(), IDGenerator: NewStableIDGenerator()}
+			auths, err := SynthesizeAuthFile(ctx, filepath.Join(ctx.AuthDir, "account.json"), []byte(tc.raw))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(auths) != 1 {
+				t.Fatalf("got %d auths", len(auths))
+			}
+			if got := auths[0].Metadata["websockets"]; got != tc.want {
+				t.Fatalf("websockets = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
