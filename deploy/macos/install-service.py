@@ -60,10 +60,17 @@ label = 'com.diodide.cliproxyapi'
 plist = home / 'Library/LaunchAgents' / (label + '.plist')
 plist.parent.mkdir(parents=True, exist_ok=True)
 domain = f'gui/{os.getuid()}'
+# Stage artifacts before stopping the running service; failed copies leave it intact.
+replacements = []
+for source, destination in [(binary, state / 'bin/cli-proxy-api'), (panel, state / 'static/management.html')]:
+    if source.resolve() != destination.resolve():
+        staged = destination.with_name(destination.name + '.next')
+        shutil.copy2(source, staged)
+        replacements.append((staged, destination))
 subprocess.run(['launchctl', 'bootout', domain + '/' + label], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-shutil.copy2(binary, state / 'bin/cli-proxy-api')
+for staged, destination in replacements:
+    os.replace(staged, destination)
 (state / 'bin/cli-proxy-api').chmod(0o700)
-shutil.copy2(panel, state / 'static/management.html')
 with plist.open('wb') as stream:
     plistlib.dump({
         'Label': label,
