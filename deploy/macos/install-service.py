@@ -7,6 +7,7 @@ import secrets
 import shutil
 import subprocess
 import sys
+import time
 
 binary, panel = map(Path, sys.argv[1:3])
 home = Path.home()
@@ -83,5 +84,13 @@ with plist.open('wb') as stream:
         'StandardOutPath': str(state / 'logs/launchd.out.log'),
         'StandardErrorPath': str(state / 'logs/launchd.err.log'),
     }, stream)
-subprocess.run(['launchctl', 'bootstrap', domain, str(plist)], check=True)
+# launchd may finish unregistering a booted-out service asynchronously.
+for attempt in range(6):
+    result = subprocess.run(['launchctl', 'bootstrap', domain, str(plist)], capture_output=True, text=True)
+    if result.returncode == 0:
+        break
+    if attempt == 5:
+        raise RuntimeError(result.stderr.strip() or 'launchctl bootstrap failed')
+    time.sleep(1)
+
 print(f'Installed {label}; config and keys are in {state}.')
