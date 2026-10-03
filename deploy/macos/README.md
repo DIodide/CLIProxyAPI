@@ -17,6 +17,21 @@ This opens an SSH tunnel, copies the management key to the clipboard, and opens
 The proxy binds only to the Mac mini's loopback address; Tailscale and SSH provide
 remote access. Keep both machines connected to Tailscale and the Mac mini awake.
 
+The console is also available directly over Tailscale HTTPS, without an SSH tunnel:
+[Open quota homepage](https://timmy-mac-mini.tail6d5626.ts.net:8443/management.html#/quota).
+Use the same management key. The Mac mini's existing Tailscale service on port 443
+is preserved; this console uses port 8443 and remains tailnet-only.
+The persistent Serve mapping is configured with:
+
+```sh
+ssh mac-mini 'tailscale serve --bg --https=8443 http://127.0.0.1:8317'
+```
+
+Codex rows show a dedicated **Manual resets** section with the banked count and
+individual expiry dates/countdowns after refreshing quota. Zero available resets
+and an unreported count are displayed distinctly. Reset actions require the
+existing confirmation; viewing or refreshing quota does not consume a reset.
+
 1. Open **OAuth Login**, choose Claude, and complete account one's login.
 2. Repeat Claude login for account two using a separate browser profile or private
    window so the provider does not silently reuse account one.
