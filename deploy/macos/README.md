@@ -72,12 +72,35 @@ claude-proxy
 codex-proxy
 ```
 
-Routing uses round-robin for new sessions, 24-hour session affinity, and inherited
-account affinity for subagents. Sessions stay on one account for cache reuse,
-with automatic failover when that account is unavailable. Two credential attempts
-per retry round suit the two-account pool. Limits still belong to the upstream
-accounts. Keep Claude on Claude models and Codex on Codex models initially;
-cross-provider protocol translation is available but needs separate testing.
+Routing favors cache reuse with these defaults in the installer and example config:
+
+```yaml
+routing:
+  strategy: "fill-first"
+  session-affinity: true
+  session-affinity-ttl: "24h"
+  session-affinity-subagents: true
+```
+
+New sessions prefer the first available credential in each provider/model pool,
+so the two accounts are not used evenly. Sessions remain on their bound account;
+subagents inherit the parent's account when the client supplies a parent reference.
+If that account becomes unavailable, automatic failover rebinds the session to
+another available account. Recovery of the first account does not move an already
+bound session back. Two credential attempts per retry round suit the two-account pool.
+
+Native Codex session IDs and prompt cache keys, and Claude Code session identities,
+are used for affinity. Keep using the same conversation when continuing work;
+the proxy preserves native cache keys rather than imposing a shared key on all
+conversations. The 24-hour setting retains account bindings since last use, not
+upstream prompt caches. Bindings are in memory and reset on service restart or
+selector replacement. Actual cache hits depend on the provider and matching prompt
+content, and need verification after accounts are connected. Limits still belong
+to the upstream accounts. Choose round-robin if balanced utilization or parallel
+throughput later matters more than account concentration.
+
+Keep Claude on Claude models and Codex on Codex models initially; cross-provider
+protocol translation is available but needs separate testing.
 
 ## Desktop apps
 

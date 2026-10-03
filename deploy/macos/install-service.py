@@ -40,7 +40,7 @@ access:
 oauth:
   auth-dir: "{state / 'auths'}"
 routing:
-  strategy: "round-robin"
+  strategy: "fill-first"
   session-affinity: true
   session-affinity-ttl: "24h"
   session-affinity-subagents: true
