@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+socket="$HOME/.config/cliproxyapi/ssh-tunnel"
+mkdir -p "$HOME/.config/cliproxyapi"
+if ssh -S "$socket" -O check mac-mini >/dev/null 2>&1; then
+  exit 0
+fi
+exec ssh -M -S "$socket" -fNT \
+  -o BatchMode=yes -o ExitOnForwardFailure=yes \
+  -o ServerAliveInterval=30 -o ServerAliveCountMax=3 \
+  -L 127.0.0.1:8317:127.0.0.1:8317 \
+  -L 127.0.0.1:1455:127.0.0.1:1455 \
+  -L 127.0.0.1:54545:127.0.0.1:54545 mac-mini

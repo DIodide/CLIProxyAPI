@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+if [ "${CLIPROXY_REMOTE:-0}" != 1 ]; then
+  "$HOME/.local/bin/cliproxy-tunnel"
+fi
+export CLIPROXY_API_KEY="$(cat "$HOME/.config/cliproxyapi/client-key")"
+exec codex \
+  -c 'model_provider="diodide"' \
+  -c 'model_providers.diodide.name="DIodide Mac mini"' \
+  -c 'model_providers.diodide.base_url="http://127.0.0.1:8317/v1"' \
+  -c 'model_providers.diodide.wire_api="responses"' \
+  -c 'model_providers.diodide.env_key="CLIPROXY_API_KEY"' \
+  -c 'model_providers.diodide.requires_openai_auth=false' \
+  "$@"

@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+"$HOME/.local/bin/cliproxy-tunnel"
+pbcopy < "$HOME/.config/cliproxyapi/management-key"
+open 'http://127.0.0.1:8317/management.html#/quota'
+printf '%s\n' 'Management key copied to clipboard. Paste it into the console login.'
