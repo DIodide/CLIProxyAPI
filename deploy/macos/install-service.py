@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Install an already-built CLIProxyAPI binary and panel as a macOS LaunchAgent."""
 import os
+import json
 from pathlib import Path
 import plistlib
 import secrets
@@ -58,6 +59,12 @@ observability:
 ''')
     config.chmod(0o600)
 label = 'com.diodide.cliproxyapi'
+environment = {'MANAGEMENT_STATIC_PATH': str(state / 'static'), 'HOME': str(home)}
+tailnet_access = state / 'tailnet-access.json'
+if tailnet_access.exists():
+    access = json.loads(tailnet_access.read_text())
+    environment['MANAGEMENT_TAILSCALE_LOGIN'] = access['login']
+    environment['MANAGEMENT_TAILSCALE_ORIGIN'] = access['origin']
 plist = home / 'Library/LaunchAgents' / (label + '.plist')
 plist.parent.mkdir(parents=True, exist_ok=True)
 domain = f'gui/{os.getuid()}'
@@ -77,7 +84,7 @@ with plist.open('wb') as stream:
         'Label': label,
         'ProgramArguments': [str(state / 'bin/cli-proxy-api'), '--config', str(config)],
         'WorkingDirectory': str(state),
-        'EnvironmentVariables': {'MANAGEMENT_STATIC_PATH': str(state / 'static'), 'HOME': str(home)},
+        'EnvironmentVariables': environment,
         'RunAtLoad': True,
         'KeepAlive': True,
         'ThrottleInterval': 10,

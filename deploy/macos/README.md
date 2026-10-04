@@ -12,20 +12,38 @@ On the laptop:
 ~/.local/bin/cliproxy-console
 ```
 
-This opens an SSH tunnel, copies the management key to the clipboard, and opens
-<http://127.0.0.1:8317/management.html#/quota>. Paste the key at login.
+This prepares the OAuth callback tunnel and opens the Tailscale console.
+Devices signed into Tailscale as `DIodide@github` enter without a management key.
 The proxy binds only to the Mac mini's loopback address; Tailscale and SSH provide
 remote access. Keep both machines connected to Tailscale and the Mac mini awake.
 
 The console is also available directly over Tailscale HTTPS, without an SSH tunnel:
 [Open quota homepage](https://timmy-mac-mini.tail6d5626.ts.net:8443/management.html#/quota).
-Use the same management key. The Mac mini's existing Tailscale service on port 443
+The Mac mini's existing Tailscale service on port 443
 is preserved; this console uses port 8443 and remains tailnet-only.
 The persistent Serve mapping is configured with:
 
 ```sh
 ssh mac-mini 'tailscale serve --bg --https=8443 http://127.0.0.1:8317'
 ```
+
+Passwordless access uses Tailscale Serve's verified identity headers, an explicit
+login/origin allowlist, and same-origin browser checks. The server must remain
+loopback-only. Other local processes are trusted, as in Tailscale's recommended
+[Serve identity-header setup](https://tailscale.com/docs/features/tailscale-serve).
+Other tailnet identities, shared external users, and tagged devices are not
+automatically granted management access. Normal inference API keys remain required.
+
+The installer reads `~/.config/cliproxyapi/tailnet-access.json` on the Mac mini:
+
+```json
+{"login":"DIodide@github","origin":"https://timmy-mac-mini.tail6d5626.ts.net:8443"}
+```
+
+It sets `MANAGEMENT_TAILSCALE_LOGIN` and `MANAGEMENT_TAILSCALE_ORIGIN` in launchd.
+Removing that file and rerunning the installer disables passwordless access.
+The management key remains available for recovery and the direct SSH-tunneled
+URL <http://127.0.0.1:8317/management.html#/quota>, which still requires the key.
 
 Codex rows show a dedicated **Manual resets** section with the banked count and
 individual expiry dates/countdowns after refreshing quota. Zero available resets

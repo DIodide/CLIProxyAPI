@@ -52,6 +52,8 @@ type Handler struct {
 	localPassword           string
 	allowRemoteOverride     bool
 	envSecret               string
+	tailnetLogin            string
+	tailnetOrigin           string
 	logDir                  string
 	postAuthHook            coreauth.PostAuthHook
 	postAuthPersistHook     coreauth.PostAuthHook
@@ -81,6 +83,8 @@ func NewHandler(cfg *config.Config, configFilePath string, manager *coreauth.Man
 		tokenStore:          sdkAuth.GetTokenStore(),
 		allowRemoteOverride: envSecret != "",
 		envSecret:           envSecret,
+		tailnetLogin:        strings.TrimSpace(os.Getenv("MANAGEMENT_TAILSCALE_LOGIN")),
+		tailnetOrigin:       strings.TrimSpace(os.Getenv("MANAGEMENT_TAILSCALE_ORIGIN")),
 	}
 	h.startAttemptCleanup()
 	return h
@@ -261,7 +265,7 @@ func (h *Handler) SetPostAuthPersistHook(hook coreauth.PostAuthHook) {
 }
 
 // Middleware enforces access control for management endpoints.
-// All requests (local and remote) require a valid management key.
+// Requests require a management key or explicitly enabled Tailscale Serve identity.
 // Additionally, remote access requires allow-remote-management=true.
 func (h *Handler) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -285,6 +289,15 @@ func (h *Handler) Middleware() gin.HandlerFunc {
 		}
 		if provided == "" {
 			provided = c.GetHeader("X-Management-Key")
+		}
+
+		if provided == "" && h.tailnetLogin != "" && c.GetHeader("Tailscale-User-Login") != "" && strings.HasPrefix(c.Request.URL.Path, "/v8/management/") {
+			if !h.authenticateTailnet(c.Request) {
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Tailscale identity or origin not allowed"})
+				return
+			}
+			c.Next()
+			return
 		}
 
 		allowed, statusCode, errMsg := h.AuthenticateManagementKey(clientIP, localClient, provided)
