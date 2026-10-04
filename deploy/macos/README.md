@@ -137,6 +137,54 @@ protocol translation is available but needs separate testing.
 
 ## Desktop apps
 
+### T3 Code
+
+T3 Code 0.0.45 is installed on the laptop, with the matching CLI/server on both
+machines. The desktop's **Settings → Connections** includes **Ibraheem’s Mac mini**,
+connected through the existing `mac-mini` SSH alias over Tailscale. No T3 Connect
+cloud login is needed for this connection. Choose the local or mini environment
+when opening a project; that environment owns the project files and runs its tools.
+
+Both environments have **Codex · CPAMC** and **Claude · CPAMC** providers enabled.
+Their launchers are `~/.local/bin/t3-codex-cpamc` and
+`~/.local/bin/t3-claude-cpamc`. The laptop reaches the proxy over Tailscale HTTPS
+on port 8443; the mini uses loopback port 8317. Keys are read from the existing
+private proxy configuration directory. Ordinary CLI login state is preserved.
+
+The Codex provider uses the isolated home `~/.config/cliproxyapi/t3-codex`, the
+Responses API, and `supports_websockets=true`. Existing proxy session/account
+affinity settings apply. Continue the same T3 thread to retain conversation
+context and help cache reuse. T3's utility text generation uses GPT-6-Luna.
+
+The native **Usage** page reads the **CPAMC · Mac mini** quota hub and shows pooled
+Claude/Codex limits and banked reset credits. The hub is configured on both
+environments in the owner-only `~/.t3/userdata/settings.json`; T3's hub integration
+requires the management key even though the browser console supports Tailscale
+identity login. Do not share this settings file. Codex's separate direct-account
+usage check can report JSON-RPC -32600 for a custom gateway provider; the CPAMC
+hub supplies quota information independently. Viewing limits does not redeem
+reset credits.
+
+The mini runs T3 as a login LaunchAgent, `com.t3tools.t3code.service`, with logs at
+`~/.t3/userdata/logs/boot-service.log`. Keep the mini awake and its user logged in.
+The laptop backend runs with the desktop app. The mini also has a tailnet-only
+HTTPS endpoint at <https://timmy-mac-mini.tail6d5626.ts.net:9443>, forwarding to
+loopback port 3773. A separate browser must complete T3 pairing; the desktop SSH
+connection is already saved and connected. Existing tailnet services on ports
+443 and 8443 are preserved.
+
+```sh
+# Mini background service status:
+ssh mac-mini '~/.local/bin/t3 service status'
+# T3 CLI on either machine:
+~/.local/bin/t3 --help
+```
+
+Short real inference requests through each T3 launcher succeeded on both machines.
+The desktop confirmed both provider health checks, the remote connection, and live
+pooled quotas. The previous laptop app and a SQLite backup are kept under
+`~/.t3-backup-before-cpamc/`.
+
 ### Codex
 
 The macOS app reads the same `~/.codex/config.toml` as the CLI. Start the tunnel
